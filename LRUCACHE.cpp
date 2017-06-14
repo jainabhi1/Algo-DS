@@ -1,140 +1,126 @@
 #include <iostream>
 #include <cstdio>
-#include <cmath>
-#include <algorithm>
-#include <vector>
-#include <stack>
-#include <climits>
-#include <set>
-#include <map>
-#include <functional>
-#include <utility>
-#include <queue>
+#include <unordered_map>
 using namespace std;
-struct node
-{
-    node *next,*prev;
-    int data;
-    node(int data)
-    {
-        this->data=data;
-        prev=next=NULL;
-    }
+struct node{
+	int data;
+	node *next,*prev;
+	node(int data)
+	{
+		this->data=data;
+		next=prev=NULL;
+	}
 };
-struct list
-{
-    node *head,*end;
-    int size;
-    int pages;
-    list(int size)
-    {
-        head=end=NULL;
-        this->size=size;
-        pages=0;
-    }
-    void append(node *temp)
-    {
-        if(!head)
-            head=end=temp;
-        else
-        {
-            end->next=temp;
-            temp->prev=end;
-            end=temp;
-        }
-        pages++;
-    }
-    void remove()
-    {
-        node *temp=head;
-        if(pages==1)
-            head=end=NULL;
-        else
-        {
-            head=head->next;
-            head->prev=NULL;
-        }
-        delete(temp);
-        pages--;
-    }
-    bool isfull()
-    {
-        if(pages==size)
-            return true;
-        else
-            return false;
-    }
-    void move(node *temp)
-    {
-        if(temp==end||pages==1)
-        {
-            return;
-        }
-        else
-        {
-            if(temp==head)
-            {
-                head=head->next;
-                head->prev=NULL;
-            }
-            else
-            {
-                temp->prev->next=temp->next;
-                temp->next->prev=temp->prev;
-            }
-            end->next=temp;
-            temp->prev=end;
-            end=temp;
-            end->next=NULL;
-        }
-    }
-    void print()
-    {
-        node *temp=head;
-        while(temp)
-        {
-            cout<<temp->data<<" ";
-            temp=temp->next;
-        }
-    }
-    void printr()
-    {
-        node *temp=end;
-        while(temp)
-        {
-            cout<<temp->data<<" ";
-            temp=temp->prev;
-        }
-    }
+class lrulist{
+	node *head,*end;
+	int pages;
+	int size;
+	unordered_map<int,node *>m;
+	void pop(node *temp)
+	{
+		if(temp == head && temp == end)
+		{
+			head = end = NULL;
+		}
+		else if(temp == head)
+		{
+			head = head->next;
+			head->prev=NULL;
+		}
+		else if(temp == end)
+		{
+			end =  end->prev;
+			end->next=NULL;
+		}
+		else
+		{
+			temp->prev->next=temp->next;
+			temp->next->prev = temp->prev;
+		}
+		
+		temp->next = temp->prev = NULL;
+	}
+	void push_back(int data)
+	{
+		node *temp = new node(data);
+		if(!head)
+			head=end=temp;
+		else
+		{
+			end->next=temp;
+			temp->prev=end;
+			end=temp;
+		}
+	}
+	void push_back(node *temp)
+	{
+		if(!head)
+			head=end=temp;
+		else
+		{
+			end->next=temp;
+			temp->prev=end;
+			end=temp;
+		}
+	}
+public:
+	lrulist(int size)
+	{
+		this->size=size;
+		head=end=NULL;
+		pages=0;
+	}
+	void push(int data)
+	{
+		
+		if(m[data] == NULL)
+		{
+			node *temp = new node(data);
+			m[data] = temp;
+			if(pages < size)
+			{
+				push_back(temp);
+				pages++;
+			}
+			else
+			{
+				node *t = head;
+				pop(t);
+				push_back(temp);
+				m[t->data] = NULL;
+				delete t;
+			}
+		}
+		else
+		{
+			node *temp = m[data];
+			pop(temp);
+			push_back(temp);
+		}
+	}
+	void print()
+	{
+		node *temp=head;
+
+		while(temp)
+		{
+			printf("%d ",temp->data);
+			temp=temp->next;
+		}
+		cout<<endl;
+	}
 };
 int main()
 {
-   list l(3);
-   node *hash[10];
-   for(int i=0;i<10;i++){
-    hash[i]=NULL;
-   } 
-   int a[]={1,2,3,1,5,4};
-   for(int i=0;i<6;i++)
-   {
-    if(hash[a[i]]==NULL)
-    {
-        node *temp=new node(a[i]);
-        hash[a[i]]=temp;
-        if(l.isfull()==false)
-        {    
-            l.append(temp);
-        }
-        else
-        {
-            l.remove();
-            l.append(temp);
-        }
-    }
-    else
-    {
-        l.move(hash[a[i]]);
-    }
-   }
-   l.print();
-}
+	lrulist l(3);
+	l.push(1);
+	l.push(2);
+	l.push(3);
+	l.push(4);
+	l.push(3);
+	l.print(); /*2 4 3*/
+	l.push(2);
+	l.push(5);
+	l.print();/* 3 2 5 */
+
+}	

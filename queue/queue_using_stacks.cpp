@@ -46,6 +46,7 @@ public:
 int main()
 {
 	queue q;
+
 	for(int i=0;i<10;i++)
 		q.enqueue(i);
 
